@@ -2,11 +2,17 @@ ARG BUILD_VERSION
 # ── Stage 1: Build from source ────────────────────────────────────────
 FROM node:26-alpine AS builder
 ARG BUILD_VERSION
+# This fork builds its own code. Without a release tag for the version, the add-on builds
+# the fork's main branch; use "Rebuild" on the add-on page to pick up newer commits.
+ARG TUNET_REPO=patrickmickmann/Tunet
+ARG TUNET_FALLBACK_BRANCH=main
 RUN apk add --no-cache curl tar python3 make g++ \
  && set -eux \
  && REF="${BUILD_VERSION:?BUILD_VERSION must name a release tag}" \
- && { curl -fsSL "https://codeload.github.com/oyvhov/Tunet/tar.gz/refs/tags/v${REF}" -o /tmp/tunet.tar.gz \
-		|| curl -fsSL "https://codeload.github.com/oyvhov/Tunet/tar.gz/refs/tags/${REF}" -o /tmp/tunet.tar.gz; } \
+ && SRC="https://codeload.github.com/${TUNET_REPO}/tar.gz" \
+ && { curl -fsSL "${SRC}/refs/tags/v${REF}" -o /tmp/tunet.tar.gz \
+		|| curl -fsSL "${SRC}/refs/tags/${REF}" -o /tmp/tunet.tar.gz \
+		|| curl -fsSL "${SRC}/refs/heads/${TUNET_FALLBACK_BRANCH}" -o /tmp/tunet.tar.gz; } \
  && mkdir -p /src \
  && tar -xzf /tmp/tunet.tar.gz --strip-components=1 -C /src \
  && cd /src \

@@ -87,4 +87,4 @@ Keep `data_encryption_key` and `data_encryption_salt` unchanged when upgrading o
 
 ## Support
 
-Report issues at <https://github.com/oyvhov/Tunet/issues>.
+Report issues at <https://github.com/patrickmickmann/Tunet/issues>.

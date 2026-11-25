@@ -5,7 +5,7 @@ version: '2.1.0'
 breaking_versions:
   - '1.25.2'
 slug: 'tunet'
-url: 'https://github.com/oyvhov/Tunet'
+url: 'https://github.com/patrickmickmann/Tunet'
 init: false
 startup: application
 # Stop the add-on during Home Assistant backups so they never copy a live SQLite WAL database.
