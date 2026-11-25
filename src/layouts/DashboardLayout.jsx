@@ -1,4 +1,4 @@
-import { Profiler, memo, useCallback, useEffect, useRef } from 'react';
+import { Profiler, memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Plus } from '../icons';
 import Header from './Header';
 import StatusBar from './StatusBar';
@@ -12,11 +12,14 @@ import DashboardGrid from '../rendering/DashboardGrid';
 import PinLockModal from '../components/ui/PinLockModal';
 import { useOptionalToast } from '../contexts/ToastContext';
 import { useScrollEdgeFade } from '../hooks/useScrollEdgeFade';
+import { useWakeLock } from '../hooks/useWakeLock';
 
 const MemoStatusBar = memo(StatusBar);
 const MemoDashboardGrid = memo(DashboardGrid);
 
 const CARDS_ONLY_EXIT_MS = 1000;
+// Wall mode: how long the edit controls stay after a long press brought them back.
+const WALL_CONTROLS_VISIBLE_MS = 60_000;
 const CARDS_ONLY_LONG_PRESS_IGNORE_SELECTOR = [
   '[data-dashboard-card]',
   'button',
@@ -50,6 +53,7 @@ export default function DashboardLayout(props) {
     sectionSpacing,
     cardsOnlyMode,
     updateCardsOnlyMode,
+    wallMode = false,
     pagesConfig,
     pageSettings = {},
     personStatus,
@@ -90,6 +94,26 @@ export default function DashboardLayout(props) {
   const wasCardsOnlyRef = useRef(cardsOnlyMode);
   const showDashboardChrome = !cardsOnlyMode;
 
+  // ── Wall mode: screen stays on, edit controls wait for a long press ──
+  useWakeLock(Boolean(wallMode));
+  const [wallControlsVisible, setWallControlsVisible] = useState(false);
+  const showEditControls = !wallMode || editMode || wallControlsVisible;
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (wallMode) root.dataset.wallMode = '';
+    else delete root.dataset.wallMode;
+    return () => {
+      delete root.dataset.wallMode;
+    };
+  }, [wallMode]);
+
+  useEffect(() => {
+    if (!wallControlsVisible || editMode) return undefined;
+    const timer = window.setTimeout(() => setWallControlsVisible(false), WALL_CONTROLS_VISIBLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [wallControlsVisible, editMode]);
+
   useEffect(() => {
     if (cardsOnlyMode && !wasCardsOnlyRef.current) {
       addToast?.(t('header.cardsOnlyExitHint'), 'info');
@@ -123,17 +147,33 @@ export default function DashboardLayout(props) {
 
   const handleCardsOnlyPointerDown = useCallback(
     (event) => {
-      if (!cardsOnlyMode || typeof updateCardsOnlyMode !== 'function') return;
+      const exitsCardsOnly = cardsOnlyMode && typeof updateCardsOnlyMode === 'function';
+      const revealsWallControls = !cardsOnlyMode && wallMode && !showEditControls;
+      if (!exitsCardsOnly && !revealsWallControls) return;
       if (event.button !== 0) return;
       if (shouldIgnoreCardsOnlyLongPress(event.target)) return;
 
       clearCardsOnlyLongPress();
       cardsOnlyExitTimerRef.current = window.setTimeout(() => {
         cardsOnlyExitTimerRef.current = null;
-        updateCardsOnlyMode(false);
+        if (exitsCardsOnly) {
+          updateCardsOnlyMode(false);
+          return;
+        }
+        setWallControlsVisible(true);
+        addToast?.(t('settings.wallModeControlsShown'), 'info');
       }, CARDS_ONLY_EXIT_MS);
     },
-    [cardsOnlyMode, clearCardsOnlyLongPress, shouldIgnoreCardsOnlyLongPress, updateCardsOnlyMode]
+    [
+      addToast,
+      cardsOnlyMode,
+      clearCardsOnlyLongPress,
+      shouldIgnoreCardsOnlyLongPress,
+      showEditControls,
+      t,
+      updateCardsOnlyMode,
+      wallMode,
+    ]
   );
 
   useEffect(() => {
@@ -320,7 +360,7 @@ export default function DashboardLayout(props) {
               setEditingPage={setEditingPage}
               t={t}
             />
-            {!isMobile && (
+            {!isMobile && showEditControls && (
               <EditToolbar
                 editMode={editMode}
                 setShowAddCardModal={guardedSetShowAddCardModal}
@@ -361,7 +401,7 @@ export default function DashboardLayout(props) {
         />
       </div>
 
-      {showDashboardChrome && isMobile && (
+      {showDashboardChrome && isMobile && showEditControls && (
         <SettingsMenuControl
           setShowConfigModal={guardedSetShowConfigModal}
           setConfigTab={setConfigTab}

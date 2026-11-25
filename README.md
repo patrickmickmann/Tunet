@@ -28,14 +28,14 @@
 
 Click the button below to add the Tunet repository directly to your Home Assistant instance, then install the add-on:
 
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Foyvhov%2Ftunet)
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fpatrickmickmann%2FTunet)
 
 <details>
 <summary>Manual Add-on Installation</summary>
 
 1. Go to **Settings** → **Add-ons** → **Add-on Store**.
 2. Click the three dots (top right) → **Repositories**.
-3. Add `https://github.com/oyvhov/tunet`.
+3. Add `https://github.com/patrickmickmann/Tunet`.
 4. Find **Tunet Dashboard**, install, and start.
 
 </details>
@@ -43,7 +43,7 @@ Click the button below to add the Tunet repository directly to your Home Assista
 ### Option 2: Docker Compose
 
 ```bash
-git clone https://github.com/oyvhov/tunet.git
+git clone https://github.com/patrickmickmann/Tunet.git
 cd tunet
 docker compose up -d
 ```
@@ -63,7 +63,7 @@ Open `http://localhost:3002` and connect your Home Assistant instance.
 <summary>Click to view local development instructions</summary>
 
 ```bash
-git clone https://github.com/oyvhov/tunet.git
+git clone https://github.com/patrickmickmann/Tunet.git
 cd tunet
 npm install
 npm run dev:all

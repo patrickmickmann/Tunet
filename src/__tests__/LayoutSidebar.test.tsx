@@ -3,8 +3,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import LayoutSidebar from '../components/sidebars/LayoutSidebar';
 
+const config = vi.hoisted(() => ({ fitToScreen: false, setFitToScreen: vi.fn() }));
+
 vi.mock('../contexts', () => ({
   usePages: () => ({ headerSettings: {}, updateHeaderSettings: vi.fn() }),
+  useConfig: () => config,
 }));
 
 vi.mock('../components/sidebars/SidebarContainer', () => ({
@@ -60,5 +63,17 @@ describe('LayoutSidebar columns slider', () => {
 
     await waitFor(() => expect(setGridColumns).toHaveBeenCalledWith(2));
     expect(savePageSetting).not.toHaveBeenCalled();
+  });
+});
+
+describe('LayoutSidebar fit to screen', () => {
+  it('switches the device setting on', () => {
+    renderSidebar({});
+
+    const toggle = screen.getByRole('switch', { name: 'settings.fitToScreen' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(toggle);
+
+    expect(config.setFitToScreen).toHaveBeenCalledWith(true);
   });
 });

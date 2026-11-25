@@ -49,6 +49,8 @@ export default function GeneralSettingsTab({
     disableSettingsLock,
     unlockSettingsLock,
     lockSettingsSession,
+    wallMode,
+    setWallMode,
   } = useConfig();
   const [securityOpen, setSecurityOpen] = useState(false);
   const [newPin, setNewPin] = useState('');
@@ -260,6 +262,10 @@ export default function GeneralSettingsTab({
               />
             </div>
           )}
+          <SidebarToggle label={t('settings.wallMode')} value={wallMode} onChange={setWallMode} />
+          <p className="pb-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            {t('settings.wallModeHint')}
+          </p>
         </div>
       </div>
 

@@ -1142,3 +1142,25 @@ html[data-density='spacious'] .touch-feedback h3 {
   --status-error-bg: rgba(239, 68, 68, 0.14);
   --status-error-border: rgba(239, 68, 68, 0.3);
 }
+
+/* ── Wall mode (wall-mounted tablet) ─────────────────────────────────── */
+/* No rubber-band scrolling, double-tap zoom, text selection or long-press callout on the
+   dashboard itself; text fields keep selection so they stay editable. */
+html[data-wall-mode],
+html[data-wall-mode] body {
+  overscroll-behavior: none;
+}
+
+html[data-wall-mode] body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+html[data-wall-mode] :is(input, textarea, [contenteditable='true']) {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { getCardGridSpan, getCardColSpan, buildGridLayout } from '../utils/gridLayout';
+import {
+  getCardGridSpan,
+  getCardColSpan,
+  buildGridLayout,
+  getFitRowPx,
+  getLayoutRowCount,
+  MIN_FIT_ROW_PX,
+} from '../utils/gridLayout';
 
 // ═════════════════════════════════════════════════════════════════════════
 // getCardGridSpan
@@ -446,5 +453,40 @@ describe('getCardColSpan', () => {
         getCardColSpan('entity_card_1', identity, { entity_card_1: settings }, options)
       ).not.toThrow();
     }
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════
+// Fit to screen
+// ═════════════════════════════════════════════════════════════════════════
+describe('getLayoutRowCount', () => {
+  it('counts down to the lowest row a card reaches', () => {
+    const layout = buildGridLayout(['a', 'b', 'c'], 2, (id) => (id === 'a' ? 3 : 1));
+    expect(getLayoutRowCount(Object.values(layout))).toBe(3);
+  });
+
+  it('is zero for an empty page', () => {
+    expect(getLayoutRowCount([])).toBe(0);
+  });
+});
+
+describe('getFitRowPx', () => {
+  it('splits the free height across the rows and their gaps', () => {
+    // iPad A16 landscape: 820px high, roughly 260px used above the grid and below it.
+    expect(getFitRowPx(560, 5, 20)).toBe(96);
+  });
+
+  it('rounds down so the rows never run past the bottom edge', () => {
+    expect(getFitRowPx(500, 3, 15)).toBe(156);
+  });
+
+  it('gives up when rows would get shorter than the minimum', () => {
+    expect(getFitRowPx(400, 8, 20)).toBeNull();
+    expect(getFitRowPx(MIN_FIT_ROW_PX, 1, 20)).toBe(MIN_FIT_ROW_PX);
+  });
+
+  it('gives up without rows or a measured height', () => {
+    expect(getFitRowPx(600, 0, 20)).toBeNull();
+    expect(getFitRowPx(Number.NaN, 3, 20)).toBeNull();
   });
 });

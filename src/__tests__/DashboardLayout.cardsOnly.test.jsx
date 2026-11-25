@@ -246,3 +246,61 @@ describe('DashboardLayout status row', () => {
     expect(row).not.toHaveAttribute('data-fade');
   });
 });
+
+describe('DashboardLayout wall mode', () => {
+  afterEach(() => {
+    delete document.documentElement.dataset.wallMode;
+  });
+
+  it('marks the document so touch callouts and overscroll are switched off', () => {
+    const { unmount } = renderLayout({ wallMode: true });
+    expect(document.documentElement).toHaveAttribute('data-wall-mode');
+
+    unmount();
+    expect(document.documentElement).not.toHaveAttribute('data-wall-mode');
+  });
+
+  it('hides the edit controls on a tablet and on a phone', () => {
+    const { unmount } = renderLayout({ wallMode: true });
+    expect(screen.queryByTestId('edit-toolbar')).not.toBeInTheDocument();
+    expect(screen.getByTestId('page-navigation')).toBeInTheDocument();
+    unmount();
+
+    renderLayout({ wallMode: true, isMobile: true });
+    expect(screen.queryByTestId('settings-menu-control')).not.toBeInTheDocument();
+  });
+
+  it('keeps the edit controls while editing', () => {
+    renderLayout({ wallMode: true, editMode: true });
+    expect(screen.getByTestId('edit-toolbar')).toBeInTheDocument();
+  });
+
+  it('shows the edit controls for a minute after a long press outside cards', () => {
+    vi.useFakeTimers();
+    renderLayout({ wallMode: true });
+    const main = screen.getByRole('main', { name: 'Dashboard' });
+
+    fireEvent.pointerDown(main, { button: 0 });
+    act(() => vi.advanceTimersByTime(999));
+    fireEvent.pointerUp(main);
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.queryByTestId('edit-toolbar')).not.toBeInTheDocument();
+
+    fireEvent.pointerDown(main, { button: 0 });
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.getByTestId('edit-toolbar')).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(60_000));
+    expect(screen.queryByTestId('edit-toolbar')).not.toBeInTheDocument();
+  });
+
+  it('does not show the edit controls when long-pressing a card', () => {
+    vi.useFakeTimers();
+    renderLayout({ wallMode: true });
+
+    fireEvent.pointerDown(screen.getByTestId('dashboard-card'), { button: 0 });
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(screen.queryByTestId('edit-toolbar')).not.toBeInTheDocument();
+  });
+});

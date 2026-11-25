@@ -126,3 +126,111 @@ describe('mobile grid controls', () => {
     expect(slider.parentElement).toHaveStyle({ touchAction: 'pan-y' });
   });
 });
+
+describe('fit to screen', () => {
+  const tabletProps = {
+    ...dashboardProps,
+    grid: { ...dashboardProps.grid, isMobile: false, fitToScreen: true },
+  };
+  const card = () => screen.getByText('Mobile test card').closest('[data-dashboard-card]');
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const renderMeasured = (props, screenSize) => {
+    const computedStyle = mockScreen(screenSize);
+    const result = render(
+      <div id="main-content">
+        <DashboardGrid {...props} />
+      </div>
+    );
+    computedStyle.mockRestore();
+    return result;
+  };
+
+  const mockScreen = ({ innerHeight, gridTop }) => {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(innerHeight);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: gridTop,
+      bottom: gridTop,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: gridTop,
+      toJSON: () => ({}),
+    });
+    // Only the measuring pass reads these; the real styles come back before the assertions.
+    return vi
+      .spyOn(window, 'getComputedStyle')
+      .mockReturnValue({ paddingBottom: '40px', rowGap: '20px' });
+  };
+
+  it('stretches the rows so the page ends at the bottom of the screen', () => {
+    // iPad A16 in landscape is 820 CSS pixels high.
+    const { container } = renderMeasured(tabletProps, { innerHeight: 820, gridTop: 200 });
+
+    // 820 - 200 above - 40 padding = 580 for two rows and one 20px gap.
+    expect(card()).toHaveStyle({ height: '580px' });
+    expect(container.querySelector('[data-fit-to-screen]')).not.toBeNull();
+  });
+
+  it('keeps the normal row height when the rows would get too short', () => {
+    const { container } = renderMeasured(tabletProps, { innerHeight: 260, gridTop: 200 });
+
+    expect(card()).toHaveStyle({ height: '224px' });
+    expect(container.querySelector('[data-fit-to-screen]')).toBeNull();
+  });
+
+  it('leaves phones alone', () => {
+    renderMeasured(
+      { ...tabletProps, grid: { ...tabletProps.grid, isMobile: true } },
+      { innerHeight: 820, gridTop: 200 }
+    );
+
+    expect(card()).toHaveStyle({ height: '188px' });
+  });
+});
+
+describe('fit to screen after the first card appears', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('measures once the page gets its first card', () => {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(820);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: 200,
+      bottom: 200,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: 200,
+      toJSON: () => ({}),
+    });
+    const computedStyle = vi
+      .spyOn(window, 'getComputedStyle')
+      .mockReturnValue({ paddingBottom: '40px', rowGap: '20px' });
+    const grid = { ...dashboardProps.grid, isMobile: false, fitToScreen: true };
+    const { rerender } = render(
+      <div id="main-content">
+        <DashboardGrid {...dashboardProps} grid={{ ...grid, gridLayout: {} }} />
+      </div>
+    );
+
+    rerender(
+      <div id="main-content">
+        <DashboardGrid {...dashboardProps} grid={grid} />
+      </div>
+    );
+    computedStyle.mockRestore();
+
+    expect(screen.getByText('Mobile test card').closest('[data-dashboard-card]')).toHaveStyle({
+      height: '580px',
+    });
+  });
+});
