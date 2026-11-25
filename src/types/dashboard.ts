@@ -66,6 +66,12 @@ export interface ConfigContextValue {
   /** Cards add one line about what happens next. Off unless the user turns it on. */
   showNextUp: boolean;
   setShowNextUp: Dispatch<SetStateAction<boolean>>;
+  /** Wall tablet: keeps the screen awake and hides the edit controls until a long press. */
+  wallMode: boolean;
+  setWallMode: Dispatch<SetStateAction<boolean>>;
+  /** Row height stretches so the active page fills the screen height without scrolling. */
+  fitToScreen: boolean;
+  setFitToScreen: Dispatch<SetStateAction<boolean>>;
   config: HomeAssistantConfig;
   setConfig: Dispatch<SetStateAction<HomeAssistantConfig>>;
 }

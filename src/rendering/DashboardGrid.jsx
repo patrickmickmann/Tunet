@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react';
 import { LayoutGrid, Plus, UserCircle2 } from '../icons';
 import CardErrorBoundary from '../components/ui/CardErrorBoundary';
 import { useHomeAssistantOffline } from '../contexts/HomeAssistantContext';
 import { formatDuration } from '../utils';
+import { getFitRowPx, getLayoutRowCount } from '../utils/gridLayout';
 
 const MediaPage = lazy(() => import('../components/pages/MediaPage'));
 const LightsPage = lazy(() => import('../components/pages/LightsPage'));
@@ -35,10 +36,59 @@ export default function DashboardGrid({ page, media, grid, cards, actions, t }) 
     callService,
     savePageSetting,
   } = media;
-  const { gridLayout, isMobile, gridGapV, gridGapH, gridColCount, isCompactCards, cardScale } =
-    grid;
+  const {
+    gridLayout,
+    isMobile,
+    gridGapV,
+    gridGapH,
+    gridColCount,
+    isCompactCards,
+    cardScale,
+    fitToScreen,
+  } = grid;
   const { cardSettings, getCardSettingsKey, hiddenCards, isCardHiddenByLogic, renderCard } = cards;
   const { setShowAddCardModal, setConfigTab, setShowConfigModal } = actions;
+
+  // ── Fit to screen: the room left below the header decides the row height ──
+  const fitActive = Boolean(fitToScreen) && !isMobile;
+  // The grid element only exists once the page has a card to place.
+  const hasPlacedCards = Object.keys(gridLayout).length > 0;
+  const gridRef = useRef(null);
+  const [fitSpace, setFitSpace] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!fitActive) {
+      setFitSpace(null);
+      return undefined;
+    }
+    const measure = () => {
+      const el = gridRef.current;
+      if (!el) return;
+      const main = el.closest('#main-content');
+      const bottomPad = main
+        ? Number.parseFloat(window.getComputedStyle(main).paddingBottom) || 0
+        : 0;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const availablePx = Math.floor(window.innerHeight - top - bottomPad);
+      const gapPx = Number.parseFloat(window.getComputedStyle(el).rowGap) || 0;
+      setFitSpace((prev) =>
+        prev && prev.availablePx === availablePx && prev.gapPx === gapPx
+          ? prev
+          : { availablePx, gapPx }
+      );
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    // The header and status row above the grid can change height (pills appear, fonts load).
+    const main = gridRef.current?.closest('#main-content');
+    const observer =
+      main && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (main) observer?.observe(main);
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer?.disconnect();
+    };
+  }, [fitActive, activePage, editMode, hasPlacedCards]);
 
   if (isMediaPage(activePage)) {
     return (
@@ -150,6 +200,13 @@ export default function DashboardGrid({ page, media, grid, cards, actions, t }) 
   const cardIndexMap = new Map((pagesConfig[activePage] || []).map((id, index) => [id, index]));
   const scaleFactor = (cardScale || 100) / 100;
   const needsScale = scaleFactor !== 1;
+  const fitRowPx = fitSpace
+    ? getFitRowPx(
+        fitSpace.availablePx,
+        getLayoutRowCount(Object.values(gridLayout)),
+        fitSpace.gapPx
+      )
+    : null;
   if (!hasVisiblePlacement) {
     const allPages = pagesConfig.pages || [];
     const totalCards =
@@ -200,6 +257,8 @@ export default function DashboardGrid({ page, media, grid, cards, actions, t }) 
   return (
     <div
       key={activePage}
+      ref={gridRef}
+      data-fit-to-screen={fitRowPx !== null ? '' : undefined}
       className="page-transition grid items-start font-sans"
       style={{
         gap: `calc(${gridGapV}px * var(--density-gap-scale, 1)) calc(${gridGapH}px * var(--density-gap-scale, 1))`,
@@ -230,9 +289,9 @@ export default function DashboardGrid({ page, media, grid, cards, actions, t }) 
           const cardContent = renderCard(id, index);
           if (!cardContent) return null;
 
-          const gapPx = gridGapV;
+          const gapPx = fitRowPx !== null ? fitSpace.gapPx : gridGapV;
           const baseRowPx = isMobile ? 82 : 100;
-          const rowPx = baseRowPx * scaleFactor;
+          const rowPx = fitRowPx ?? baseRowPx * scaleFactor;
           let cardHeight;
           if (
             id.startsWith('spacer_card_') &&

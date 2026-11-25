@@ -56,6 +56,7 @@ export type UseAppViewModelsParams = Pick<
   | 'setDensity'
   | 'cardScale'
   | 'setCardScale'
+  | 'fitToScreen'
   | 'inactivityTimeout'
   | 'setInactivityTimeout'
 > &
@@ -296,6 +297,7 @@ export function useAppViewModels(params: UseAppViewModelsParams) {
     setDensity,
     cardScale,
     setCardScale,
+    fitToScreen,
     inactivityTimeout,
     setInactivityTimeout,
     setGridGapH,
@@ -466,8 +468,9 @@ export function useAppViewModels(params: UseAppViewModelsParams) {
       gridColCount,
       isCompactCards,
       cardScale,
+      fitToScreen,
     }),
-    [gridLayout, isMobile, gridGapV, gridGapH, gridColCount, isCompactCards, cardScale]
+    [gridLayout, isMobile, gridGapV, gridGapH, gridColCount, isCompactCards, cardScale, fitToScreen]
   );
 
   const dashboardGridCards = useMemo(

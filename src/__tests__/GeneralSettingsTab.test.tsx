@@ -11,6 +11,8 @@ const config = vi.hoisted(() => ({
   disableSettingsLock: vi.fn(),
   unlockSettingsLock: vi.fn(),
   lockSettingsSession: vi.fn(),
+  wallMode: false,
+  setWallMode: vi.fn(),
 }));
 
 vi.mock('../contexts', () => ({ useConfig: () => config }));
@@ -104,5 +106,14 @@ describe('GeneralSettingsTab', () => {
 
     expect(screen.getByTestId('pin-dialog')).toHaveTextContent('settings.lock.enterPinToDisable');
     expect(config.disableSettingsLock).not.toHaveBeenCalled();
+  });
+
+  it('switches wall display mode on and explains how to get the edit buttons back', () => {
+    render(<GeneralSettingsTab {...makeProps()} />);
+
+    expect(screen.getByText('settings.wallModeHint')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('switch', { name: 'settings.wallMode' }));
+
+    expect(config.setWallMode).toHaveBeenCalledWith(true);
   });
 });

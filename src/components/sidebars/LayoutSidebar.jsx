@@ -7,7 +7,7 @@ import {
 } from '../../hooks/useResponsiveGrid';
 import { MOBILE_BREAKPOINT } from '../../config/constants';
 import { Columns, Eye, Maximize2, Navigation } from '../../icons';
-import { usePages } from '../../contexts';
+import { useConfig, usePages } from '../../contexts';
 import SidebarContainer from './SidebarContainer';
 import {
   SidebarAccordion,
@@ -105,6 +105,7 @@ export default function LayoutSidebar({
     nav: false,
   });
   const { headerSettings, updateHeaderSettings } = usePages();
+  const { fitToScreen, setFitToScreen } = useConfig();
   const navStyle = NAV_STYLE_OPTIONS.includes(headerSettings?.navStyle)
     ? headerSettings.navStyle
     : 'pill';
@@ -345,6 +346,17 @@ export default function LayoutSidebar({
               value={gridGapV}
               onChange={(e) => setGridGapV(parseInt(e.target.value, 10))}
             />
+          </div>
+          {/* Fit to screen */}
+          <div>
+            <Toggle
+              label={t('settings.fitToScreen')}
+              value={fitToScreen}
+              onChange={setFitToScreen}
+            />
+            <p className="mt-1 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              {t('settings.fitToScreenHint')}
+            </p>
           </div>
         </SidebarAccordion>
 

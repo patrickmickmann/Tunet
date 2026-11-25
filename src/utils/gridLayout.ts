@@ -356,3 +356,20 @@ export const buildGridLayout = (
 
   return positions;
 };
+
+/** Fit-to-screen never shrinks rows below this; a page with more rows scrolls instead. */
+export const MIN_FIT_ROW_PX = 56;
+
+/** Number of grid rows the placed cards reach down to. */
+export const getLayoutRowCount = (placements: readonly GridPosition[]): number =>
+  placements.reduce((rows, { row, span }) => Math.max(rows, row + span - 1), 0);
+
+/**
+ * Row height that makes `rows` rows and their gaps fill `availablePx` exactly, or null when
+ * the rows would end up shorter than MIN_FIT_ROW_PX (the page then keeps its normal height).
+ */
+export const getFitRowPx = (availablePx: number, rows: number, gapPx: number): number | null => {
+  if (!Number.isFinite(availablePx) || rows < 1) return null;
+  const rowPx = Math.floor((availablePx - Math.max(0, rows - 1) * gapPx) / rows);
+  return rowPx >= MIN_FIT_ROW_PX ? rowPx : null;
+};

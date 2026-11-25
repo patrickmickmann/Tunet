@@ -85,6 +85,8 @@ export function AppContent({ showOnboarding, setShowOnboarding }) {
     cardScale,
     setCardScale,
     appFont,
+    wallMode,
+    fitToScreen,
     settingsLockEnabled,
     settingsLockSessionUnlocked,
     unlockSettingsLock,
@@ -659,6 +661,7 @@ export function AppContent({ showOnboarding, setShowOnboarding }) {
     setDensity,
     cardScale,
     setCardScale,
+    fitToScreen,
     inactivityTimeout,
     setInactivityTimeout,
     setGridGapH,
@@ -821,6 +824,7 @@ export function AppContent({ showOnboarding, setShowOnboarding }) {
         sectionSpacing={sectionSpacing}
         cardsOnlyMode={cardsOnlyMode}
         updateCardsOnlyMode={updateCardsOnlyMode}
+        wallMode={wallMode}
         pagesConfig={pagesConfig}
         pageSettings={pageSettings}
         personStatus={personStatus}

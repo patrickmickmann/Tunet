@@ -222,6 +222,24 @@ export const ConfigProvider = ({ children }: ConfigProviderProps) => {
     }
   });
 
+  // Device-only settings: a wall tablet and a phone sharing a profile want different values,
+  // so these stay out of profile snapshots.
+  const [wallMode, setWallMode] = useState(() => {
+    try {
+      return localStorage.getItem('tunet_wall_mode') === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const [fitToScreen, setFitToScreen] = useState(() => {
+    try {
+      return localStorage.getItem('tunet_fit_to_screen') === '1';
+    } catch {
+      return false;
+    }
+  });
+
   const [config, setConfig] = useState<HomeAssistantConfig>(() => {
     if (typeof globalThis.window !== 'undefined') {
       // Ingress auto-detection: if served under /api/hassio_ingress/<token>,
@@ -512,6 +530,18 @@ export const ConfigProvider = ({ children }: ConfigProviderProps) => {
     } catch {}
   }, [showNextUp]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('tunet_wall_mode', wallMode ? '1' : '0');
+    } catch {}
+  }, [wallMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tunet_fit_to_screen', fitToScreen ? '1' : '0');
+    } catch {}
+  }, [fitToScreen]);
+
   // Save language to localStorage
   useEffect(() => {
     const normalizedLanguage = normalizeLanguage(language);
@@ -631,6 +661,10 @@ export const ConfigProvider = ({ children }: ConfigProviderProps) => {
       setAppFont,
       showNextUp,
       setShowNextUp,
+      wallMode,
+      setWallMode,
+      fitToScreen,
+      setFitToScreen,
       config,
       setConfig,
     }),
@@ -658,6 +692,8 @@ export const ConfigProvider = ({ children }: ConfigProviderProps) => {
       cardScale,
       appFont,
       showNextUp,
+      wallMode,
+      fitToScreen,
       config,
     ]
   );
